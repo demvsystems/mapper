@@ -30,6 +30,10 @@ class Mapper implements MapperInterface
      * @var bool
      */
     private $debug = false;
+    /**
+     * @var bool
+     */
+    private $keepAllUnmatched = false;
 
     /**
      * Mapper constructor.
@@ -53,6 +57,22 @@ class Mapper implements MapperInterface
     public function disableDebug()
     {
         $this->debug = false;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isKeepAllUnmatched(): bool
+    {
+        return $this->keepAllUnmatched;
+    }
+
+    /**
+     * @param bool $keepAllUnmatched
+     */
+    public function setKeepAllUnmatched(bool $keepAllUnmatched): void
+    {
+        $this->keepAllUnmatched = $keepAllUnmatched;
     }
 
     /**
@@ -223,6 +243,10 @@ class Mapper implements MapperInterface
             if ($this->hasCurrentCallback($key)) {
                 $this->applyCallback($key, $value);
                 $this->markAsVisited($key);
+            } elseif ($this->keepAllUnmatched) {
+                $this->keep($this->getCurrentKey($key));
+                $this->applyCallback($key, $value);
+                $this->markAsVisited($key);
             }
         }
 
@@ -302,6 +326,27 @@ class Mapper implements MapperInterface
      */
     final public function merge(array $attributes)
     {
-        $this->attributes = array_merge_recursive($this->attributes, $attributes);
+        $this->attributes = self::mergeRecursiveDistinct($this->attributes, $attributes);
     }
+
+    /**
+     * @param array $array1
+     * @param array $array2
+     *
+     * @return array
+     */
+    private static function mergeRecursiveDistinct(array &$array1, array &$array2): array
+    {
+        $merged = $array1;
+        foreach ($array2 as $key => &$value) {
+            if (is_array($value) && isset ($merged [$key]) && is_array($merged[$key])) {
+                $merged [$key] = self::mergeRecursiveDistinct($merged[$key], $value);
+            } else {
+                $merged [$key] = $value;
+            }
+        }
+
+        return $merged;
+    }
+
 }
