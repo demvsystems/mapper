@@ -62,7 +62,7 @@ class Mapper implements MapperInterface
     /**
      * @return bool
      */
-    public function isKeepAllUnmatched(): bool
+    public function shouldUnmatchedBeKept(): bool
     {
         return $this->keepAllUnmatched;
     }
