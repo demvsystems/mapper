@@ -68,4 +68,25 @@ final class MapperTest extends TestCase
         $mapped = $mapper->applyMapping(['foo' => 42, 'bar' => 23]);
         $this->assertEquals(['foo' => 42], $mapped);
     }
+
+    public function testKeepAllUnmatched()
+    {
+        $mapper = new Mapper();
+        $mapper->keep('foo');
+        $mapper->setKeepAllUnmatched(true);
+
+        $mapped = $mapper->applyMapping(['foo' => 42, 'bar' => 23]);
+        $this->assertEquals(['foo' => 42, 'bar' => 23], $mapped);
+
+        $mapper = new Mapper();
+        $mapper->keep('foo.a');
+
+        $mapped = $mapper->applyMapping(['foo' => ['a' => 'b', 'x' => 'y']]);
+        $this->assertEquals(['foo' => ['a' => 'b']], $mapped);
+
+        $mapper->setKeepAllUnmatched(true);
+
+        $mapped = $mapper->applyMapping(['foo' => ['a' => 'b', 'x' => 'y']]);
+        $this->assertEquals(['foo' => ['a' => 'b', 'x' => 'y']], $mapped);
+    }
 }
