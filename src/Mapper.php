@@ -2,6 +2,7 @@
 
 namespace Demv\Mapper;
 
+use Exception;
 use SplStack;
 
 /**
@@ -34,6 +35,22 @@ class Mapper implements MapperInterface
      * @var bool
      */
     private $keepAllUnmatched = false;
+    /**
+     * @var bool
+     */
+    private $fillMissingValues = true;
+    /**
+     * @var bool
+     */
+    private $allowOverride = false;
+    /**
+     * @var bool
+     */
+    private $warnOnDuplicateTranslations = false;
+    /**
+     * @var array
+     */
+    private $translations = [];
 
     /**
      * Mapper constructor.
@@ -76,6 +93,74 @@ class Mapper implements MapperInterface
     }
 
     /**
+     * @param bool $fillMissingValues
+     */
+    public function setFillMissingValues(bool $fillMissingValues): void
+    {
+        $this->fillMissingValues = $fillMissingValues;
+    }
+
+    /**
+     * @return bool
+     */
+    public function shouldMissingValuesBeFilled(): bool
+    {
+        return $this->fillMissingValues;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isOverrideAllowed(): bool
+    {
+        return $this->allowOverride;
+    }
+
+    /**
+     * @param bool $allowOverride
+     */
+    public function setAllowOverride(bool $allowOverride): void
+    {
+        $this->allowOverride = $allowOverride;
+    }
+
+    /**
+     * @return bool
+     */
+    public function warnOnDuplicateTranslations(): bool
+    {
+        return $this->warnOnDuplicateTranslations;
+    }
+
+    /**
+     * @param bool $warnOnDuplicateTranslations
+     */
+    public function setWarnOnDuplicateTranslations(bool $warnOnDuplicateTranslations): void
+    {
+        $this->warnOnDuplicateTranslations = $warnOnDuplicateTranslations;
+    }
+
+    /**
+     * @param string $to
+     *
+     * @return bool
+     */
+    public function hasTranslation(string $to): bool
+    {
+        return array_key_exists($to, $this->translations);
+    }
+
+    /**
+     * @param string $key
+     *
+     * @return array
+     */
+    public function getTranslations(string $key): array
+    {
+        return $this->translations[$key] ?? [];
+    }
+
+    /**
      *
      */
     private function reset()
@@ -89,7 +174,7 @@ class Mapper implements MapperInterface
      */
     private function markAsVisited(string $key)
     {
-        $this->visited[] = $this->getCurrentKey($key);
+        $this->visited[$this->getCurrentKey($key)] = true;
     }
 
     /**
@@ -99,7 +184,7 @@ class Mapper implements MapperInterface
      */
     private function wasVisited(string $key): bool
     {
-        return in_array($key, $this->visited);
+        return array_key_exists($key, $this->visited);
     }
 
     /**
@@ -121,14 +206,34 @@ class Mapper implements MapperInterface
     }
 
     /**
+     * @param string $from
+     * @param string $to
+     *
+     * @throws Exception
+     */
+    private function insertTranslation(string $from, string $to): void
+    {
+        if ($this->hasTranslation($to) && $this->warnOnDuplicateTranslations) {
+            $translation = $this->getTranslations($to)[0];
+            throw new Exception(sprintf('There is already a translation for %s with %s', $to, $translation));
+        }
+
+        $this->translations[$to][]   = $from;
+        $this->translations[$from][] = $to;
+    }
+
+    /**
      * @param string        $from
      * @param string        $to
      * @param callable|null $constraint
      *
      * @return Mapper
+     * @throws Exception
      */
     final public function translate(string $from, string $to, callable $constraint = null): self
     {
+        $this->insertTranslation($from, $to);
+
         return $this->map($from, function (MapperInterface $mapper, $value) use ($to) {
             $mapper->setAttribute($to, $value);
         }, $constraint);
@@ -195,7 +300,10 @@ class Mapper implements MapperInterface
     {
         $this->reset();
         $this->executeMapping($source);
-        $this->fillMissingValues();
+
+        if ($this->fillMissingValues) {
+            $this->fillMissingValues();
+        }
 
         return $this->attributes;
     }
@@ -218,10 +326,28 @@ class Mapper implements MapperInterface
     public function fillMissingValues()
     {
         foreach ($this->callbacks as $key => $callback) {
-            if (!$this->wasVisited($key)) {
+            if (!$this->wasVisited($key) && !$this->wereOneTranslationsVisited($key)) {
                 $callback($this, null);
             }
         }
+    }
+
+    /**
+     * @param string $key
+     *
+     * @return bool
+     */
+    private function wereOneTranslationsVisited(string $key): bool
+    {
+        foreach ($this->getTranslations($key) as $from) {
+            foreach ($this->getTranslations($from) as $to) {
+                if ($this->wasVisited($to)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -240,7 +366,7 @@ class Mapper implements MapperInterface
                 }
             }
 
-            if ($this->hasCurrentCallback($key)) {
+            if ($this->hasCurrentCallback($key) && $this->canBeApplied($key)) {
                 $this->applyCallback($key, $value);
                 $this->markAsVisited($key);
             } elseif ($this->keepAllUnmatched) {
@@ -251,6 +377,16 @@ class Mapper implements MapperInterface
         }
 
         $this->pop();
+    }
+
+    /**
+     * @param string $key
+     *
+     * @return bool
+     */
+    private function canBeApplied(string $key): bool
+    {
+        return $this->isOverrideAllowed() || !$this->wereOneTranslationsVisited($key);
     }
 
     /**
@@ -340,13 +476,12 @@ class Mapper implements MapperInterface
         $merged = $array1;
         foreach ($array2 as $key => &$value) {
             if (is_array($value) && isset ($merged [$key]) && is_array($merged[$key])) {
-                $merged [$key] = self::mergeRecursiveDistinct($merged[$key], $value);
+                $merged[$key] = self::mergeRecursiveDistinct($merged[$key], $value);
             } else {
-                $merged [$key] = $value;
+                $merged[$key] = $value;
             }
         }
 
         return $merged;
     }
-
 }
