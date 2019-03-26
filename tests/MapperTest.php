@@ -91,7 +91,7 @@ final class MapperTest extends TestCase
         $this->assertEquals(['foo' => ['a' => 'b', 'x' => 'y']], $mapped);
     }
 
-    public function testWarnOnDuplicateTranslations()
+    public function testWarnOnDuplicateTranslations(): void
     {
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('There is already a translation for Hausnummer with street_nr');
@@ -102,7 +102,7 @@ final class MapperTest extends TestCase
         $mapper->translate('street_number', 'Hausnummer');
     }
 
-    public function testFillMissingValues()
+    public function testFillMissingValues(): void
     {
         $mapper = new Mapper();
         $mapper->translate('street_nr', 'Hausnummer');
@@ -115,7 +115,7 @@ final class MapperTest extends TestCase
         $this->assertEquals([], $data);
     }
 
-    public function testOverride()
+    public function testOverride(): void
     {
         $mapper = new Mapper();
         $mapper->translate('street_nr', 'Hausnummer');
@@ -131,7 +131,7 @@ final class MapperTest extends TestCase
         $this->assertEquals(['Hausnummer' => '23'], $data);
     }
 
-    public function testDontOverrideDuplicateTranslationWithNull()
+    public function testDontOverrideDuplicateTranslationWithNull(): void
     {
         $mapper = new Mapper();
         $mapper->translate('street_nr', 'Hausnummer');
