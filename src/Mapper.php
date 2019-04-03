@@ -326,7 +326,7 @@ class Mapper implements MapperInterface
     public function fillMissingValues()
     {
         foreach ($this->callbacks as $key => $callback) {
-            if (!$this->wasVisited($key) && !$this->wereOneTranslationsVisited($key)) {
+            if (!$this->wasVisited($key) && !$this->wasAtLeastOneTranslationVisisted($key)) {
                 $callback($this, null);
             }
         }
@@ -337,7 +337,7 @@ class Mapper implements MapperInterface
      *
      * @return bool
      */
-    private function wereOneTranslationsVisited(string $key): bool
+    private function wasAtLeastOneTranslationVisisted(string $key): bool
     {
         foreach ($this->getTranslations($key) as $from) {
             foreach ($this->getTranslations($from) as $to) {
@@ -386,7 +386,7 @@ class Mapper implements MapperInterface
      */
     private function canBeApplied(string $key): bool
     {
-        return $this->isOverrideAllowed() || !$this->wereOneTranslationsVisited($key);
+        return $this->isOverrideAllowed() || !$this->wasAtLeastOneTranslationVisisted($key);
     }
 
     /**
