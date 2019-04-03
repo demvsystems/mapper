@@ -15,11 +15,11 @@ final class MapperTest extends TestCase
 {
     use Specify;
 
-    public function testMapConstraint()
+    public function testMapConstraint(): void
     {
-        $this->specify('Ohne Constraint', function () {
+        $this->specify('Ohne Constraint', function (): void {
             $mapper = new Mapper();
-            $mapper->map('foo.bar', function (Mapper $mapper, $value) {
+            $mapper->map('foo.bar', function (Mapper $mapper, $value): void {
                 $mapper->setAttribute('my.value', $value);
             });
 
@@ -27,9 +27,9 @@ final class MapperTest extends TestCase
             $this->assertEquals(['my' => ['value' => null]], $mapped);
         });
 
-        $this->specify('Mit Constraint und ohne Value', function () {
+        $this->specify('Mit Constraint und ohne Value', function (): void {
             $mapper = new Mapper();
-            $mapper->map('foo.bar', function (Mapper $mapper, int $value) {
+            $mapper->map('foo.bar', function (Mapper $mapper, int $value): void {
                 $mapper->setAttribute('my.value', $value);
             }, function ($value): bool {
                 return !empty($value);
@@ -39,9 +39,9 @@ final class MapperTest extends TestCase
             $this->assertEmpty($mapped);
         });
 
-        $this->specify('Mit Constraint und leerem Value', function () {
+        $this->specify('Mit Constraint und leerem Value', function (): void {
             $mapper = new Mapper();
-            $mapper->map('foo.bar', function (Mapper $mapper, int $value) {
+            $mapper->map('foo.bar', function (Mapper $mapper, int $value): void {
                 $mapper->setAttribute('my.value', $value);
             }, function ($value): bool {
                 return !empty($value);
@@ -52,7 +52,7 @@ final class MapperTest extends TestCase
         });
     }
 
-    public function testTranslate()
+    public function testTranslate(): void
     {
         $mapper = new Mapper();
         $mapper->translate('foo', 'bar');
@@ -61,7 +61,7 @@ final class MapperTest extends TestCase
         $this->assertEquals(['bar' => 42], $mapped);
     }
 
-    public function testKeep()
+    public function testKeep(): void
     {
         $mapper = new Mapper();
         $mapper->keep('foo');
@@ -70,7 +70,7 @@ final class MapperTest extends TestCase
         $this->assertEquals(['foo' => 42], $mapped);
     }
 
-    public function testKeepAllUnmatched()
+    public function testKeepAllUnmatched(): void
     {
         $mapper = new Mapper();
         $mapper->keep('foo');
@@ -91,7 +91,7 @@ final class MapperTest extends TestCase
         $this->assertEquals(['foo' => ['a' => 'b', 'x' => 'y']], $mapped);
     }
 
-    public function testWarnOnDuplicateTranslations()
+    public function testWarnOnDuplicateTranslations(): void
     {
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('There is already a translation for Hausnummer with street_nr');
@@ -102,7 +102,7 @@ final class MapperTest extends TestCase
         $mapper->translate('street_number', 'Hausnummer');
     }
 
-    public function testFillMissingValues()
+    public function testFillMissingValues(): void
     {
         $mapper = new Mapper();
         $mapper->translate('street_nr', 'Hausnummer');
@@ -115,7 +115,7 @@ final class MapperTest extends TestCase
         $this->assertEquals([], $data);
     }
 
-    public function testOverride()
+    public function testOverride(): void
     {
         $mapper = new Mapper();
         $mapper->translate('street_nr', 'Hausnummer');
@@ -131,7 +131,7 @@ final class MapperTest extends TestCase
         $this->assertEquals(['Hausnummer' => '23'], $data);
     }
 
-    public function testDontOverrideDuplicateTranslationWithNull()
+    public function testDontOverrideDuplicateTranslationWithNull(): void
     {
         $mapper = new Mapper();
         $mapper->translate('street_nr', 'Hausnummer');

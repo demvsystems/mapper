@@ -63,7 +63,7 @@ class Mapper implements MapperInterface
     /**
      *
      */
-    public function enableDebug()
+    public function enableDebug(): void
     {
         $this->debug = true;
     }
@@ -71,7 +71,7 @@ class Mapper implements MapperInterface
     /**
      *
      */
-    public function disableDebug()
+    public function disableDebug(): void
     {
         $this->debug = false;
     }
@@ -163,7 +163,7 @@ class Mapper implements MapperInterface
     /**
      *
      */
-    private function reset()
+    private function reset(): void
     {
         $this->visited    = [];
         $this->attributes = [];
@@ -172,7 +172,7 @@ class Mapper implements MapperInterface
     /**
      * @param string $key
      */
-    private function markAsVisited(string $key)
+    private function markAsVisited(string $key): void
     {
         $this->visited[$this->getCurrentKey($key)] = true;
     }
@@ -196,7 +196,7 @@ class Mapper implements MapperInterface
      */
     final public function map(string $key, callable $callback, callable $constraint = null): self
     {
-        $this->callbacks[$key] = function (MapperInterface $mapper, $value) use ($callback, $constraint) {
+        $this->callbacks[$key] = function (MapperInterface $mapper, $value) use ($callback, $constraint): void {
             if ($constraint === null || $constraint($value)) {
                 $callback($mapper, $value);
             }
@@ -234,7 +234,7 @@ class Mapper implements MapperInterface
     {
         $this->insertTranslation($from, $to);
 
-        return $this->map($from, function (MapperInterface $mapper, $value) use ($to) {
+        return $this->map($from, function (MapperInterface $mapper, $value) use ($to): void {
             $mapper->setAttribute($to, $value);
         }, $constraint);
     }
@@ -247,7 +247,7 @@ class Mapper implements MapperInterface
      */
     final public function keep(string $key, callable $constraint = null): self
     {
-        return $this->map($key, function (MapperInterface $mapper, $value) use ($key) {
+        return $this->map($key, function (MapperInterface $mapper, $value) use ($key): void {
             $mapper->setAttribute($key, $value);
         }, $constraint);
     }
@@ -323,7 +323,7 @@ class Mapper implements MapperInterface
     /**
      *
      */
-    public function fillMissingValues()
+    public function fillMissingValues(): void
     {
         foreach ($this->callbacks as $key => $callback) {
             if (!$this->wasVisited($key) && !$this->wasAtLeastOneTranslationVisisted($key)) {
@@ -353,7 +353,7 @@ class Mapper implements MapperInterface
     /**
      * @param array $source
      */
-    private function executeMapping(array $source)
+    private function executeMapping(array $source): void
     {
         foreach ($source as $key => $value) {
             if (is_array($value)) {
@@ -393,7 +393,7 @@ class Mapper implements MapperInterface
      * @param string $key
      * @param        $value
      */
-    private function push(string $key, $value)
+    private function push(string $key, $value): void
     {
         if (is_array($value)) {
             $this->keys->push($key);
@@ -406,7 +406,7 @@ class Mapper implements MapperInterface
     /**
      *
      */
-    private function pop()
+    private function pop(): void
     {
         if (!$this->keys->isEmpty()) {
             $key = $this->keys->pop();
@@ -420,7 +420,7 @@ class Mapper implements MapperInterface
      * @param string $key
      * @param        $value
      */
-    private function applyCallback(string $key, $value)
+    private function applyCallback(string $key, $value): void
     {
         $this->getCurrentCallback($key)($this, $value);
     }
@@ -430,7 +430,7 @@ class Mapper implements MapperInterface
      * @param array $attributes
      * @param       $value
      */
-    private function addEntry(array $keys, array &$attributes, $value)
+    private function addEntry(array $keys, array &$attributes, $value): void
     {
         $count = count($keys);
         $key   = array_shift($keys);
@@ -448,7 +448,7 @@ class Mapper implements MapperInterface
      * @param string $category
      * @param        $value
      */
-    final public function setAttribute(string $category, $value)
+    final public function setAttribute(string $category, $value): void
     {
         $keys  = explode('.', $category);
         $attrs = [];
@@ -460,7 +460,7 @@ class Mapper implements MapperInterface
     /**
      * @param array $attributes
      */
-    final public function merge(array $attributes)
+    final public function merge(array $attributes): void
     {
         $this->attributes = self::mergeRecursiveDistinct($this->attributes, $attributes);
     }
@@ -475,7 +475,7 @@ class Mapper implements MapperInterface
     {
         $merged = $array1;
         foreach ($array2 as $key => &$value) {
-            if (is_array($value) && isset ($merged [$key]) && is_array($merged[$key])) {
+            if (is_array($value) && isset($merged [$key]) && is_array($merged[$key])) {
                 $merged[$key] = self::mergeRecursiveDistinct($merged[$key], $value);
             } else {
                 $merged[$key] = $value;

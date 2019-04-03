@@ -10,11 +10,11 @@ final class ConstraintMapperTest extends TestCase
 {
     use Specify;
 
-    public function testConstraint()
+    public function testConstraint(): void
     {
-        $this->specify('Ohne Constraint', function () {
+        $this->specify('Ohne Constraint', function (): void {
             $mapper = new Mapper();
-            $mapper->map('foo.bar', function (Mapper $mapper, $value) {
+            $mapper->map('foo.bar', function (Mapper $mapper, $value): void {
                 $mapper->setAttribute('my.value', $value);
             });
 
@@ -22,9 +22,9 @@ final class ConstraintMapperTest extends TestCase
             $this->assertEquals(['my' => ['value' => null]], $mapped);
         });
 
-        $this->specify('Mit Constraint und ohne Value', function () {
+        $this->specify('Mit Constraint und ohne Value', function (): void {
             $mapper = new Mapper();
-            $mapper->map('foo.bar', function (Mapper $mapper, int $value) {
+            $mapper->map('foo.bar', function (Mapper $mapper, int $value): void {
                 $mapper->setAttribute('my.value', $value);
             }, function ($value): bool {
                 return !empty($value);
@@ -34,9 +34,9 @@ final class ConstraintMapperTest extends TestCase
             $this->assertEmpty($mapped);
         });
 
-        $this->specify('Mit Constraint und leerem Value', function () {
+        $this->specify('Mit Constraint und leerem Value', function (): void {
             $mapper = new Mapper();
-            $mapper->map('foo.bar', function (Mapper $mapper, int $value) {
+            $mapper->map('foo.bar', function (Mapper $mapper, int $value): void {
                 $mapper->setAttribute('my.value', $value);
             }, function ($value): bool {
                 return !empty($value);
